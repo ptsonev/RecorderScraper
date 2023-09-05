@@ -45,6 +45,14 @@ I have created one entry in the input file (keywords.xlsx) for each keyword per 
 <br/>
 **The scraper will "remember" which keywords and date ranges are scraped, so it won't repeat them, once they are completed**
 
+## Output
+The scraper will automatically create output.xlsx after it completes the scraping.<br/>
+You can stop the scraper prematurely by pressing CTRL+C twice.<br/>
+You can also create the output file by running the following command:<br/>
+```
+py export.py
+```
+
 
 ## Multithreading
 
