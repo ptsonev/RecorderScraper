@@ -1,0 +1,5 @@
+numpy
+openpyxl
+pandas
+python_dateutil
+Scrapy==2.10.0
