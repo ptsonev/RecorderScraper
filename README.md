@@ -39,10 +39,6 @@ or enter one start_date and one end_date, and it will be used for all keywords t
 You have to input at least one start_date and end_date
 <br/>
 <br/>
-The websites are fairly slow and unstable, so while scraping the data, I limited the date range to 1 year. <br/>
-I have created one entry in the input file (keywords.xlsx) for each keyword per year.<br/>
-<br/>
-<br/>
 **The scraper will "remember" which keywords and date ranges are scraped, so it won't repeat them, once they are completed**
 
 ## Output
