@@ -301,7 +301,7 @@ class RecorderBaseSpider(scrapy.Spider):
             if input_request.callback:
                 additional_requests = input_request.callback(last_response)
                 if additional_requests:
-                    last_response = await self.execute_requests_inline(additional_requests)
+                    _input_requests.append(additional_requests)
 
         return last_response
 
