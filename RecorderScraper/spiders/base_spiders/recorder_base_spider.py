@@ -141,7 +141,7 @@ class RecorderBaseSpider(scrapy.Spider):
                 if current_errors >= MAXIMUM_ERRORS_ALLOWED:
                     self.logger.error(f'The scraping will stop for {self.name} County. Reason: too many errors occurred. Start URL: {self.start_urls[0]}')
                     return
-                self.logger.exception(ex)
+                # self.logger.exception(ex)
 
     def _parse_item(self, response: Response):
         item_loader = ItemLoader(item=RecorderItem(), response=response)
