@@ -1,3 +1,5 @@
+from scrapy import Request, FormRequest
+
 from RecorderScraper.spiders.base_spiders.docsearch_base_spider import DocSearchBaseSpider
 
 
@@ -190,3 +192,16 @@ class SanJoaquinSpider(DocSearchBaseSpider):
 
     def __init__(self, *args, **kwargs):
         super().__init__('https://sser.sjgov.org/Web/', 'DOCSEARCH3032S8', *args, **kwargs)
+
+    def get_search_requests(self, document_type: str = '') -> list[Request]:
+        start_date, end_date = self.get_date_range()
+        search_post_data = {
+            'field_BothNamesID': self.current_keyword['keyword'],
+            'field_RecDateID_DOT_StartDate': start_date,
+            'field_RecDateID_DOT_EndDate': end_date,
+        }
+
+        return [
+            FormRequest(url=self.search_post_url, headers=self.DEFAULT_AJAX_REQUEST_HEADER, cookies=self.docsearch_disclaimer_cookie, formdata=search_post_data),
+            Request(url=self.search_results_url, headers=self.DEFAULT_AJAX_REQUEST_HEADER, cookies=self.docsearch_disclaimer_cookie),
+        ]
