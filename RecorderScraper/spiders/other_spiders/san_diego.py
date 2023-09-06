@@ -20,7 +20,7 @@ class SanDiegoSpider(RecorderBaseSpider):
         self.filter_search_results_url = 'https://arcc-acclaim.sdcounty.ca.gov/Search/SearchTypePreName'
         self.grid_results_url = 'https://arcc-acclaim.sdcounty.ca.gov/Search/GridResults'
 
-        self.details_url = 'https://recorder.mynevadacounty.com/AcclaimWeb/details/documentdetails/{}'
+        self.details_url = 'https://arcc-acclaim.sdcounty.ca.gov/details/documentdetails/{}'
 
         self.start_urls = [self.init_url]
 
