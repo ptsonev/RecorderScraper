@@ -162,3 +162,28 @@ class AlpineSpider(DocSearchBaseSpider):
 
     def __init__(self, *args, **kwargs):
         super().__init__('https://erss.alpinecountyca.gov/web/', 'DOCSEARCH4S1', *args, **kwargs)
+
+
+class SanLuisObispoSpider(DocSearchBaseSpider):
+    """
+    Cloudflare, may stop working in the future
+    """
+    name = 'San Luis Obispo'
+    # https://crrecords.slocounty.ca.gov/SLOWeb/search/DOCSEARCH262S3
+    docsearch_doc_type = ['ASSIGNMENT OF DEED OF TRUST', 'DEED OF TRUST']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__('https://crrecords.slocounty.ca.gov/SLOWeb/', 'DOCSEARCH262S3', *args, **kwargs)
+
+
+class SanJoaquinSpider(DocSearchBaseSpider):
+    """
+    Imperva, may stop working in the future
+    """
+    name = 'San Joaquin'
+    # https://sser.sjgov.org/Web/search/DOCSEARCH3032S8
+    docsearch_doc_type = ['Deed Of Trust-Assignment', 'Deed Of Trust']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__('https://sser.sjgov.org/Web/', 'DOCSEARCH3032S8', *args, **kwargs)
+

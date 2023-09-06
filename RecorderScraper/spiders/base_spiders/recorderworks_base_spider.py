@@ -102,5 +102,5 @@ class RecorderWorksBaseSpider(RecorderBaseSpider):
     def get_search_filter_requests(self, response: Response) -> list[Request]:
         pass
 
-    def get_disclaimer_requests(self) -> list[Request]:
+    def get_disclaimer_requests(self, response) -> list[Request]:
         pass

@@ -62,7 +62,7 @@ class MendocinoSpider(RecorderBaseSpider):
         item_loader.add_xpath('recording_date', '//span[normalize-space(text())="Recording Date"]/following-sibling::span//text()')
         item_loader.add_xpath('grantees', '//table[normalize-space(@class)="sortableDataTable" and.//th[normalize-space(text())="Grantee"]]//tr/td//text()')
 
-    def get_disclaimer_requests(self) -> list[Request]:
+    def get_disclaimer_requests(self, response) -> list[Request]:
         post_data = {
             'guest': 'true',
             'submit': 'Public Login'

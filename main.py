@@ -9,6 +9,7 @@ import RecorderScraper.spiders.docsearch_spiders as docsearch
 import RecorderScraper.spiders.official_records_spiders as officialrecords
 import RecorderScraper.spiders.other_spiders as other
 import RecorderScraper.spiders.recordworks_spiders as recorderworks
+# import RecorderScraper.spiders.clerk_recorder_spiders as clerkrecorders
 from RecorderScraper.helpers import load_input_keywords_from_excel, load_scraped_data_from_jsonl
 from export import generate_excel_report
 
@@ -74,7 +75,20 @@ def main():
 
         other.SanDiegoSpider,
         other.TulareSpider,
+
+
+
+        docsearch.SanLuisObispoSpider,
+        docsearch.SanJoaquinSpider,
+        other.PlacerSpider,
+
+        recorderworks.MercedSpider,
+
+        other.NevadaSpider,
     ]
+
+    # for spider in all_spiders:
+    #     print(f'{spider.name}')
 
     for spider in all_spiders:
         current_completed_keywords = [

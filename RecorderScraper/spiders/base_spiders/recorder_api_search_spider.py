@@ -73,7 +73,7 @@ class RecorderApiSearchSpider(RecorderBaseSpider):
         document_type = item_loader.get_output_value('document_type').split('<br/>')
         item_loader.replace_value('document_type', document_type)
 
-    def get_disclaimer_requests(self) -> list[Request]:
+    def get_disclaimer_requests(self, response) -> list[Request]:
         return Request(url=self.init_url, headers=self.auth_header, callback=self.parse_auth_token)
 
     def parse_auth_token(self, response: Response):

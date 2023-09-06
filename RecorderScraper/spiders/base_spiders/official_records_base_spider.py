@@ -56,7 +56,7 @@ class OfficialRecordsBaseSpider(RecorderBaseSpider):
         # The website returns all results in a single page
         pass
 
-    def get_disclaimer_requests(self) -> list[Request]:
+    def get_disclaimer_requests(self, response) -> list[Request]:
         pass
 
     def get_search_filter_requests(self, response: Response) -> list[Request]:

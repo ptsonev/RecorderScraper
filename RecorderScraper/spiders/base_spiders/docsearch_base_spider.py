@@ -76,5 +76,5 @@ class DocSearchBaseSpider(RecorderBaseSpider):
         item_loader.add_xpath('document_type', '//li[normalize-space(text())="Document Type"]/following-sibling::li/text()')
         item_loader.add_xpath('grantees', '//div[strong[normalize-space(text())="Grantee:"]]/following-sibling::div//li/text()|//div[strong[normalize-space(text())="Grantee:"]]/following-sibling::div/text()')
 
-    def get_disclaimer_requests(self) -> list[Request]:
+    def get_disclaimer_requests(self, response) -> list[Request]:
         pass

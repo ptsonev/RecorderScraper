@@ -65,5 +65,5 @@ class MarinSpider(RecorderBaseSpider):
 
         item_loader.add_value('grantees', grantees)
 
-    def get_disclaimer_requests(self) -> list[Request]:
+    def get_disclaimer_requests(self, response) -> list[Request]:
         pass

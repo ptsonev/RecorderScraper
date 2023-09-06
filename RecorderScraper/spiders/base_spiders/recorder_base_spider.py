@@ -81,7 +81,7 @@ class RecorderBaseSpider(scrapy.Spider):
         MAXIMUM_ERRORS_ALLOWED = 15
         current_errors = 0
 
-        disclaimer_requests = self.get_disclaimer_requests()
+        disclaimer_requests = self.get_disclaimer_requests(response)
         if disclaimer_requests:
             await self.execute_requests_inline(disclaimer_requests)
 
@@ -102,18 +102,22 @@ class RecorderBaseSpider(scrapy.Spider):
                             # self.logger.error(f'Search error for {self.current_keyword}\nPossible reason - too many records were found.')
 
                         filtered_item_requests = []
-                        for item_request, document_types in unfiltered_item_requests:
+                        if unfiltered_item_requests:
+                            for item_request, document_types in unfiltered_item_requests:
 
-                            if document_types is None:
-                                filtered_item_requests.append(item_request)
-                            else:
-                                formatted_document_types = [remove_non_az(doc) for doc in document_types]
-                                if any(doc_type in formatted_document_types for doc_type in self.document_type_filter):
+                                if document_types is None:
                                     filtered_item_requests.append(item_request)
+                                else:
+                                    formatted_document_types = [remove_non_az(doc) for doc in document_types]
+                                    if any(doc_type in formatted_document_types for doc_type in self.document_type_filter):
+                                        filtered_item_requests.append(item_request)
 
                         for index, item_request in enumerate(filtered_item_requests):
-                            item_response = await self.execute_requests_inline(item_request)
-                            current_item = self._parse_item(item_response)
+                            if 'grantees' not in item_request.cb_kwargs:
+                                item_response = await self.execute_requests_inline(item_request)
+                                current_item = self._parse_item(item_response)
+                            else:
+                                current_item = self._parse_item(item_request)
 
                             if not current_item.get('grantees'):
                                 self.logger.error(f'No grantees found for {current_item["document_url"]}')
@@ -137,7 +141,7 @@ class RecorderBaseSpider(scrapy.Spider):
                 if current_errors >= MAXIMUM_ERRORS_ALLOWED:
                     self.logger.error(f'The scraping will stop for {self.name} County. Reason: too many errors occurred. Start URL: {self.start_urls[0]}')
                     return
-                # self.logger.exception(ex)
+                self.logger.exception(ex)
 
     def _parse_item(self, response: Response):
         item_loader = ItemLoader(item=RecorderItem(), response=response)
@@ -162,7 +166,7 @@ class RecorderBaseSpider(scrapy.Spider):
         pass
 
     @abstractmethod
-    def get_disclaimer_requests(self) -> list[Request]:
+    def get_disclaimer_requests(self, response: Response) -> list[Request]:
         pass
 
     @abstractmethod
@@ -295,7 +299,9 @@ class RecorderBaseSpider(scrapy.Spider):
                 raise HttpError(last_response, f'Ignoring response {last_response}: HTTP status code is not handled or not allowed')
 
             if input_request.callback:
-                input_request.callback(last_response)
+                additional_requests = input_request.callback(last_response)
+                if additional_requests:
+                    last_response = await self.execute_requests_inline(additional_requests)
 
         return last_response
 

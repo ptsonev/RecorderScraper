@@ -1,4 +1,5 @@
 from scrapy import Request
+from scrapy.http import Response
 
 from RecorderScraper.spiders.base_spiders.recorderworks_base_spider import RecorderWorksBaseSpider
 
@@ -44,7 +45,15 @@ class MercedSpider(RecorderWorksBaseSpider):
     def __init__(self, *args, **kwargs):
         super().__init__('https://web2.co.merced.ca.us/RecorderWorksInternet/', *args, **kwargs)
         self.start_urls = ['https://web2.co.merced.ca.us/RecorderWorksInternet/Account/Login.aspx?ReturnUrl=%2fRecorderWorksInternet%2f']
-        raise NotImplementedError()
+
+    def get_item_details_requests(self, response: Response) -> list[tuple[Request, list[str]]]:
+        all_requests = self.parse_item_details_from_search_results(response,
+                                                                   rows_xpath='//div[div[contains(@id, "regularContent")]]',
+                                                                   document_type='.//td[normalize-space(text())="Document Type:"]/following-sibling::td/text()',
+                                                                   recording_date='.//td[normalize-space(text())="Recording Date:"]/following-sibling::td/text()',
+                                                                   url_or_id='preceding-sibling::div[1]//input[contains(@id, "_chkDoc_")]/@value',
+                                                                   url_format=self.details_page_format_url)
+        return self.construct_item_details_requests(all_requests)
 
     def get_search_requests(self, document_type='') -> list[Request]:
         return super().get_search_requests('')[1:]

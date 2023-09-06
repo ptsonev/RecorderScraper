@@ -55,7 +55,7 @@ class KernSpider(RecorderBaseSpider):
     def parse_item(self, item_loader: ItemLoader):
         item_loader.add_xpath('grantees', '//table[.//b[normalize-space(text())="Grantee Names"]]/tr/td[2]//text()')
 
-    def get_disclaimer_requests(self) -> list[Request]:
+    def get_disclaimer_requests(self, response) -> list[Request]:
         return Request(url=self.init_url, callback=self.parse_user_key),
 
     def parse_user_key(self, response: Response):

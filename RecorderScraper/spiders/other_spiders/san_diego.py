@@ -20,7 +20,7 @@ class SanDiegoSpider(RecorderBaseSpider):
         self.filter_search_results_url = 'https://arcc-acclaim.sdcounty.ca.gov/Search/SearchTypePreName'
         self.grid_results_url = 'https://arcc-acclaim.sdcounty.ca.gov/Search/GridResults'
 
-        self.details_url = 'https://arcc-acclaim.sdcounty.ca.gov/details/documentdetails/{}'
+        self.details_url = 'https://recorder.mynevadacounty.com/AcclaimWeb/details/documentdetails/{}'
 
         self.start_urls = [self.init_url]
 
@@ -89,5 +89,5 @@ class SanDiegoSpider(RecorderBaseSpider):
         item_loader.add_xpath('recording_date', '//div[normalize-space(@class)="detailLabel" and normalize-space(text())="Record Date:"]/following-sibling::div/text()')
         item_loader.add_xpath('grantees', '//div[normalize-space(@class)="detailLabel" and normalize-space(text())="Grantee:"]/following-sibling::div//text()')
 
-    def get_disclaimer_requests(self) -> list[Request]:
+    def get_disclaimer_requests(self, response) -> list[Request]:
         return FormRequest(url=self.disclaimer_url, formdata={'disclaimer': 'true'})
