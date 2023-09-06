@@ -76,8 +76,6 @@ def main():
         other.SanDiegoSpider,
         other.TulareSpider,
 
-
-
         docsearch.SanLuisObispoSpider,
         docsearch.SanJoaquinSpider,
         other.PlacerSpider,

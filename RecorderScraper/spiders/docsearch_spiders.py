@@ -172,6 +172,10 @@ class SanLuisObispoSpider(DocSearchBaseSpider):
     # https://crrecords.slocounty.ca.gov/SLOWeb/search/DOCSEARCH262S3
     docsearch_doc_type = ['ASSIGNMENT OF DEED OF TRUST', 'DEED OF TRUST']
 
+    custom_settings = {
+        'DOWNLOAD_DELAY': 5
+    }
+
     def __init__(self, *args, **kwargs):
         super().__init__('https://crrecords.slocounty.ca.gov/SLOWeb/', 'DOCSEARCH262S3', *args, **kwargs)
 
@@ -186,4 +190,3 @@ class SanJoaquinSpider(DocSearchBaseSpider):
 
     def __init__(self, *args, **kwargs):
         super().__init__('https://sser.sjgov.org/Web/', 'DOCSEARCH3032S8', *args, **kwargs)
-
