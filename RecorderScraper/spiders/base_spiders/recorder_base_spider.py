@@ -191,7 +191,7 @@ class RecorderBaseSpider(scrapy.Spider):
         all_results = []
         if rows_xpath:
             for current_result in cls.execute_xpath_or_jmespath(response, rows_xpath):
-                url_or_id_value = cls.execute_xpath_or_jmespath(current_result, url_or_id).get()
+                url_or_id_value = (cls.execute_xpath_or_jmespath(current_result, url_or_id).get() or '').strip()
 
                 input_dict = dict(document_type=document_type, recording_date=recording_date, **kwargs)
                 result_data = {
