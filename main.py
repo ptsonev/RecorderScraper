@@ -16,8 +16,14 @@ logger = logging.getLogger(__name__)
 
 
 def main():
+    # generate_input('data_backup\\Borrower Name Schedule.xlsx')
+
     settings = get_project_settings()
-    scraped_data_file_name = next(iter(settings.get('FEEDS', {}).keys()))
+    scraping_mode = settings.get('SCRAPING_MODE')
+    if scraping_mode not in {'grantees', 'grantor'}:
+        raise Exception('Unknown scraping mode: {}'.format(scraping_mode))
+
+    scraped_data_file_name = settings.get('DATA_FILE')
     input_excel_file_path = settings.get('INPUT_FILE')
 
     process = CrawlerProcess(settings, install_root_handler=False)
@@ -34,23 +40,26 @@ def main():
     completed_keywords = [line for line in scraped_data if line.get('last_record')]
 
     all_spiders = [
-        docsearch.VenturaSpider,
+        # RecorderWorks spiders
         recorderworks.OrangeSpider,
-        apispiders.SanFranciscoSpider,
-
         recorderworks.ContraCostaSpider,
         recorderworks.SanMateoSpider,
         recorderworks.StanislausSpider,
+        recorderworks.MercedSpider,
         recorderworks.ImperialSpider,
         recorderworks.SiskiyouSpider,
         recorderworks.ModocSpider,
 
+        # DOCSEARCH spiders
         docsearch.RiversideSpider,
         docsearch.SanBernardinoSpider,
         docsearch.FresnoSpider,
+        docsearch.VenturaSpider,
+        docsearch.SanJoaquinSpider,
         docsearch.SonomaSpider,
         docsearch.SantaBarbaraSpider,
         docsearch.MontereySpider,
+        docsearch.SanLuisObispoSpider,
         docsearch.ButteSpider,
         docsearch.YoloSpider,
         docsearch.ElDoradoSpider,
@@ -63,25 +72,25 @@ def main():
         docsearch.InyoSpider,
         docsearch.AlpineSpider,
 
+        # API spiders
+        apispiders.SacramentoSpider,
+        apispiders.SanFranciscoSpider,
+
+        # Official Records spiders
         officialrecords.TehamaSpider,
         officialrecords.TrinitySpider,
 
-        apispiders.SacramentoSpider,
+        # San Diego and Nevada are in the same website group, but I implemented them as separate spiders
+        # TODO -> merge them into the same base class
+        other.SanDiegoSpider,
+        other.NevadaSpider,
 
+        # Other spiders
+        other.KernSpider,
+        other.TulareSpider,
+        other.PlacerSpider,
         other.MarinSpider,
         other.MendocinoSpider,
-        other.KernSpider,
-
-        other.SanDiegoSpider,
-        other.TulareSpider,
-
-        docsearch.SanLuisObispoSpider,
-        docsearch.SanJoaquinSpider,
-        other.PlacerSpider,
-
-        recorderworks.MercedSpider,
-
-        other.NevadaSpider,
     ]
 
     # for spider in all_spiders:

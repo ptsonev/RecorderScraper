@@ -119,8 +119,10 @@ class RecorderBaseSpider(scrapy.Spider):
                             else:
                                 current_item = self._parse_item(item_request)
 
-                            if not current_item.get('grantees'):
-                                self.logger.error(f'No grantees found for {current_item["document_url"]}')
+                            test_fields = ['grantor', 'grantees']
+                            for test_field in test_fields:
+                                if not current_item.get(test_field):
+                                    self.logger.error(f'No {test_field} found for {current_item["document_url"]}')
 
                             yield current_item
 

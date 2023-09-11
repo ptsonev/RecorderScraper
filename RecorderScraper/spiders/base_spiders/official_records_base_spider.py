@@ -51,6 +51,7 @@ class OfficialRecordsBaseSpider(RecorderBaseSpider):
 
     def parse_item(self, item_loader: ItemLoader):
         item_loader.add_xpath('grantees', '//td[normalize-space(text())="Grantee"]/following-sibling::td//text()')
+        item_loader.add_xpath('grantor', '//td[normalize-space(text())="Grantor"]/following-sibling::td//text()')
 
     def get_next_search_page_request(self, response: Response, document_type: str = '', current_page: int = -1) -> Request:
         # The website returns all results in a single page

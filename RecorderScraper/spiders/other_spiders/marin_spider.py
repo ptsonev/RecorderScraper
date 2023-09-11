@@ -1,4 +1,4 @@
-from scrapy import Request, FormRequest
+from scrapy import Request, FormRequest, Selector
 from scrapy.http import Response
 from scrapy.loader import ItemLoader
 
@@ -53,17 +53,25 @@ class MarinSpider(RecorderBaseSpider):
     def parse_item(self, item_loader: ItemLoader):
         item_loader.add_xpath('recording_date', '//td[normalize-space(text())="Recording Date:"]/following-sibling::td/text()')
         item_loader.add_xpath('document_type', '//td[normalize-space(text())="Document Title:"]/following-sibling::td/text()')
-        grantees = []
-        rows = item_loader.context['selector'].xpath('//tr[td[normalize-space(text())="Grantees:"]]/following-sibling::tr|//tr[td[normalize-space(text())="Grantees:"]]')
-        for row in rows:
+
+        grantees = self.parse_html_table('Grantees:', item_loader.context['selector'])
+        item_loader.add_value('grantees', grantees)
+
+        grantor = self.parse_html_table('Grantors:', item_loader.context['selector'])
+        item_loader.add_value('grantor', grantor)
+
+    @staticmethod
+    def parse_html_table(field_name: str, selector: Selector):
+        result = []
+        xpath = f'//tr[td[normalize-space(text())="{field_name}"]]/following-sibling::tr|//tr[td[normalize-space(text())="{field_name}"]]'
+        for row in selector.xpath(xpath):
             row_header = (row.xpath('td[1]/text()').get() or '').strip()
             row_value = (row.xpath('td[2]/text()').get() or '').strip()
-            if row_header == '' or row_header == 'Grantees:':
-                grantees.append(row_value)
+            if row_header == '' or row_header == field_name:
+                result.append(row_value)
             else:
                 break
-
-        item_loader.add_value('grantees', grantees)
+        return result
 
     def get_disclaimer_requests(self, response) -> list[Request]:
         pass

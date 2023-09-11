@@ -88,6 +88,7 @@ class SanDiegoSpider(RecorderBaseSpider):
     def parse_item(self, item_loader: ItemLoader):
         item_loader.add_xpath('recording_date', '//div[normalize-space(@class)="detailLabel" and normalize-space(text())="Record Date:"]/following-sibling::div/text()')
         item_loader.add_xpath('grantees', '//div[normalize-space(@class)="detailLabel" and normalize-space(text())="Grantee:"]/following-sibling::div//text()')
+        item_loader.add_xpath('grantor', '//div[normalize-space(@class)="detailLabel" and normalize-space(text())="Grantor:"]/following-sibling::div//text()')
 
     def get_disclaimer_requests(self, response) -> list[Request]:
         return FormRequest(url=self.disclaimer_url, formdata={'disclaimer': 'true'})

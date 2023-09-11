@@ -45,6 +45,7 @@ class TulareSpider(RecorderBaseSpider):
 
     def parse_item(self, item_loader: ItemLoader):
         item_loader.add_xpath('grantees', '//table[.//th/p[normalize-space(text())="Grantees:"]]/tr/td[2]//text()')
+        item_loader.add_xpath('grantor', '//table[.//th/p[normalize-space(text())="Grantors:"]]/tr/td[1]//text()')
 
     def get_disclaimer_requests(self, response) -> list[Request]:
         pass

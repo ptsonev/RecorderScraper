@@ -80,6 +80,7 @@ class RecorderWorksBaseSpider(RecorderBaseSpider):
 
     def parse_item(self, item_loader: ItemLoader):
         item_loader.add_xpath('grantees', '//div[normalize-space(@id)="Grantees"]//text()')
+        item_loader.add_xpath('grantor', '//div[normalize-space(@id)="Grantors"]//text()')
 
     def get_search_post_data_helper(self, page: int = -1) -> dict[str, str]:
         start_date, end_date = self.get_date_range()

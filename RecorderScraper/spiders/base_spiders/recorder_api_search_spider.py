@@ -69,7 +69,9 @@ class RecorderApiSearchSpider(RecorderBaseSpider):
         return self.construct_item_details_requests(item_details, headers=self.auth_header)
 
     def parse_item(self, item_loader: ItemLoader):
-        item_loader.add_jmes('grantees', 'NamesForPagination[*].Fullname')
+        item_loader.add_jmes('grantees', 'NamesForPagination[?NameTypeDesc==`Grantee`].Fullname')
+        item_loader.add_jmes('grantor', 'NamesForPagination[?NameTypeDesc==`Grantor`].Fullname')
+
         document_type = item_loader.get_output_value('document_type').split('<br/>')
         item_loader.replace_value('document_type', document_type)
 

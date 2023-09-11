@@ -12,6 +12,16 @@ BOT_NAME = "RecorderScraper"
 SPIDER_MODULES = ["RecorderScraper.spiders"]
 NEWSPIDER_MODULE = "RecorderScraper.spiders"
 
+# grantees or grantor
+# the data file will be saved as data_grantees.jsonl or data_grantor.jsonl
+# the input file is keywords_grantees.xlsx or keywords_grantor.xlsx
+# the report file is output_grantees.xlsx or output_grantor.xlsx
+SCRAPING_MODE = 'grantor'
+# SCRAPING_MODE = 'grantees'
+INPUT_FILE = f'keywords_{SCRAPING_MODE}.xlsx'
+DATA_FILE = f'data_{SCRAPING_MODE}.jsonl'
+OUTPUT_FILE = f'output_{SCRAPING_MODE}.xlsx'
+
 DOWNLOAD_TIMEOUT = 60
 
 AUTOTHROTTLE_ENABLED = False
@@ -56,7 +66,7 @@ DOWNLOADER_MIDDLEWARES = {
 }
 
 FEEDS = {
-    'data.jsonl': {
+    DATA_FILE: {
         'format': 'jsonlines',
         'overwrite': False,
         'encoding': 'utf8'
@@ -73,6 +83,3 @@ HTTPCACHE_STORAGE = "scrapy.extensions.httpcache.FilesystemCacheStorage"
 REQUEST_FINGERPRINTER_IMPLEMENTATION = "2.7"
 TWISTED_REACTOR = "twisted.internet.asyncioreactor.AsyncioSelectorReactor"
 FEED_EXPORT_ENCODING = "utf-8"
-
-INPUT_FILE = 'keywords.xlsx'
-OUTPUT_FILE = 'output.xlsx'

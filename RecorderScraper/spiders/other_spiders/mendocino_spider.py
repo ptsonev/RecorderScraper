@@ -61,6 +61,7 @@ class MendocinoSpider(RecorderBaseSpider):
     def parse_item(self, item_loader: ItemLoader):
         item_loader.add_xpath('recording_date', '//span[normalize-space(text())="Recording Date"]/following-sibling::span//text()')
         item_loader.add_xpath('grantees', '//table[normalize-space(@class)="sortableDataTable" and.//th[normalize-space(text())="Grantee"]]//tr/td//text()')
+        item_loader.add_xpath('grantor', '//table[normalize-space(@class)="sortableDataTable" and.//th[normalize-space(text())="Grantor"]]//tr/td//text()')
 
     def get_disclaimer_requests(self, response) -> list[Request]:
         post_data = {

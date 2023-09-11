@@ -62,17 +62,25 @@ class PlacerSpider(RecorderBaseSpider):
                                                                    url_or_id='.//input[normalize-space(@name)="navCB"]/@value',
                                                                    document_type='td[8]/text()',
                                                                    recording_date='td[9]/text()',
-                                                                   grantees='td[5]/span/@title|td[5]/span/text()')
+                                                                   grantees='td[5]/span/@title|td[5]/span/text()',
+                                                                   grantor='td[7]/span/@title|td[7]/span/text()')
 
         return self.construct_item_details_requests(details_data)
 
     def parse_item(self, item_loader: ItemLoader):
+        grantees_list = item_loader.get_output_value('grantees')
+        item_loader.replace_value('grantees', self.parse_names(grantees_list))
 
-        all_grantees = set()
-        for grantee_list in item_loader.get_output_value('grantees') or []:
-            for grantee in grantee_list.split('::'):
-                all_grantees.add(grantee)
-        item_loader.replace_value('grantees', all_grantees)
+        grantor_list = item_loader.get_output_value('grantor')
+        item_loader.replace_value('grantor', self.parse_names(grantor_list))
+
+    @staticmethod
+    def parse_names(input_names: list[str]):
+        result = set()
+        for name_list in input_names or []:
+            for name in name_list.split('::'):
+                result.add(name)
+        return result
 
     def get_disclaimer_requests(self, response) -> list[Request]:
         token = response.xpath('//input[normalize-space(@name)="token"]/@value').get()

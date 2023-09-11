@@ -30,62 +30,63 @@ def set_table_style(worksheet: Worksheet, table_name: str, table_style: str = 'T
     worksheet.add_table(table)
 
 
-def _generate_excel_report(scraped_data: list[dict[str, str]], output_excel_file_path: str = 'output.xlsx'):
+def prettify_columns(input_names: list[str]):
+    return [n.replace('_', ' ').title() for n in input_names]
+
+
+def _generate_excel_report(scraped_data: list[dict[str, str]], scraping_mode: str, output_excel_file_path: str = 'output.xlsx'):
     workbook = openpyxl.Workbook()
     workbook.remove(workbook['Sheet'])
 
-    # Grantee Results Sheet
-    grantee_results_sheet = workbook.create_sheet('Results')
-    grantee_results_sheet_columns = ['Keyword', 'County', 'Grantee', 'Recording Date', 'Document Type', 'Document Url']
-    grantee_results_sheet.append(grantee_results_sheet_columns)
+    results_sheet_columns = ['keyword', 'county', scraping_mode, 'recording_date', 'document_type', 'document_url']
+
+    # Grantee/Grantor Results Sheet
+    results_sheet = workbook.create_sheet('Results')
+    results_sheet.append(prettify_columns(results_sheet_columns))
 
     unique_names = set()
-    all_grantee_results = []
+    all_results = []
     for current_record in scraped_data:
-        if current_record.get('last_record') or not current_record.get('grantees'):
+        current_names_list = current_record.get(scraping_mode)
+        if current_record.get('last_record') or not current_names_list:
             continue
 
-        for grantee in current_record['grantees']:
-            if grantee in unique_names:
+        for name in current_names_list:
+            if name in unique_names:
                 continue
-            unique_names.add(grantee)
+            unique_names.add(name)
 
-            current_result = dict.fromkeys(grantee_results_sheet_columns)
+            current_result = dict.fromkeys(results_sheet_columns)
             for key in current_result.keys():
-                output_key = key.replace(' ', '_').lower()
-                if key == 'Recording Date':
-                    current_result[key] = parse_recording_date([current_record.get(output_key)])
+                value = current_record.get(key)
+                if key == 'recording_date':
+                    current_result[key] = parse_recording_date([value])
                 else:
-                    current_result[key] = current_record.get(output_key)
+                    current_result[key] = value
 
-            current_result['Grantee'] = grantee
+            current_result[scraping_mode] = name
 
-            all_grantee_results.append(current_result)
+            all_results.append(current_result)
 
-    all_grantee_results.sort(key=itemgetter('County', 'Grantee'))
-    for grantee in all_grantee_results:
-        grantee_results_sheet.append(list(grantee.values()))
+    all_results.sort(key=itemgetter('county', scraping_mode))
+    for result in all_results:
+        results_sheet.append(list(result.values()))
 
-    set_table_style(grantee_results_sheet, 'results')
-    auto_fit_columns(grantee_results_sheet)
+    set_table_style(results_sheet, 'results')
+    auto_fit_columns(results_sheet)
 
     # County Counter Sheet
-    grantees_count_by_county_sheet = workbook.create_sheet('Grantees Count by County')
-    grantees_count_by_county_columns = ['County', 'Grantees Found']
-    grantees_count_by_county_sheet.append(grantees_count_by_county_columns)
+    results_count_by_county_sheet = workbook.create_sheet(f'{scraping_mode.title()} Count by County')
+    results_count_by_county_sheet.append(['County', f'Names Found'])
+    for key, group in groupby(all_results, key=itemgetter('county')):
+        results_count_by_county_sheet.append([key, len(list(group))])
 
-    county_grouping = groupby(all_grantee_results, key=itemgetter('County'))
-
-    for key, group in county_grouping:
-        grantees_count_by_county_sheet.append([key, len(list(group))])
-
-    set_table_style(grantees_count_by_county_sheet, 'county')
-    auto_fit_columns(grantees_count_by_county_sheet)
+    set_table_style(results_count_by_county_sheet, 'county')
+    auto_fit_columns(results_count_by_county_sheet)
 
     # Lender Counter Sheet
     documents_found_sheet = workbook.create_sheet('Documents Count by Lender')
-    documents_found_sheet_columns = ['Lender(Keyword)', 'Start Date', 'End Date', 'Documents Found']
-    documents_found_sheet.append(documents_found_sheet_columns)
+    documents_found_sheet.append(['Lender(Keyword)', 'Start Date', 'End Date', 'Documents Found'])
     results = [
         list(key) + [len([i for i in group if not i['last_record']])]
         for key, group in groupby(sorted(scraped_data, key=itemgetter('keyword', 'start_date', 'end_date')),
@@ -104,10 +105,11 @@ def _generate_excel_report(scraped_data: list[dict[str, str]], output_excel_file
 def generate_excel_report():
     logger.info('Preparing the Excel report. Please wait...')
     settings = get_project_settings()
-    scraped_data_file_name = next(iter(settings.get('FEEDS', {}).keys()))
+    scraping_mode = settings.get('SCRAPING_MODE')
+    scraped_data_file_name = settings.get('DATA_FILE')
     output_excel_file_path = settings.get('OUTPUT_FILE')
     scraped_data = load_scraped_data_from_jsonl(scraped_data_file_name)
-    _generate_excel_report(scraped_data, output_excel_file_path=output_excel_file_path)
+    _generate_excel_report(scraped_data, scraping_mode=scraping_mode, output_excel_file_path=output_excel_file_path)
     logger.info(f'All data was successfully saved to {output_excel_file_path}')
 
 

@@ -19,4 +19,5 @@ class RecorderItem(scrapy.Item):
     recording_date = Field(input_processor=MapCompose(format_whitespaces), output_processor=parse_recording_date)
     document_type = Field(input_processor=MapCompose(format_whitespaces), output_processor=Join(','))
     grantees = Field(input_processor=MapCompose(format_whitespaces, str.upper), output_processor=filter_duplicates)
+    grantor = Field(input_processor=MapCompose(format_whitespaces, str.upper), output_processor=filter_duplicates)
     last_record = Field(output_processor=TakeFirst())
