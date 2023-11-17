@@ -1,5 +1,7 @@
 import logging
+import os
 
+import pandas as pd
 from scrapy.crawler import CrawlerProcess
 from scrapy.utils.log import configure_logging
 from scrapy.utils.project import get_project_settings
@@ -10,6 +12,7 @@ import RecorderScraper.spiders.official_records_spiders as officialrecords
 import RecorderScraper.spiders.other_spiders as other
 import RecorderScraper.spiders.recordworks_spiders as recorderworks
 from RecorderScraper.helpers import load_input_keywords_from_excel, load_scraped_data_from_jsonl
+from RecorderScraper.spiders.entity_spider import EntitySpider
 from export import generate_excel_report
 
 logger = logging.getLogger(__name__)
@@ -20,11 +23,12 @@ def main():
 
     settings = get_project_settings()
     scraping_mode = settings.get('SCRAPING_MODE')
-    if scraping_mode not in {'grantees', 'grantor'}:
+    if scraping_mode not in {'grantees', 'grantor', 'entity'}:
         raise Exception('Unknown scraping mode: {}'.format(scraping_mode))
 
     scraped_data_file_name = settings.get('DATA_FILE')
     input_excel_file_path = settings.get('INPUT_FILE')
+    output_excel_file_path = settings.get('OUTPUT_FILE')
 
     process = CrawlerProcess(settings, install_root_handler=False)
 
@@ -33,86 +37,110 @@ def main():
     file_handler = logging.FileHandler('scrapy_errors.log')
     file_handler.setLevel(logging.WARNING)
     logging.root.handlers.append(file_handler)
+    desktop_path = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Desktop')
 
-    scraped_data = load_scraped_data_from_jsonl(scraped_data_file_name)
-    input_keywords = load_input_keywords_from_excel(input_excel_file_path)
-    input_columns = input_keywords[0].keys()
-    completed_keywords = [line for line in scraped_data if line.get('last_record')]
+    OUTPUT_DIR = os.path.join(desktop_path, 'Recorder\\')
+    if not os.path.exists(OUTPUT_DIR):
+        os.makedirs(OUTPUT_DIR)
 
-    all_spiders = [
-        # RecorderWorks spiders
-        recorderworks.OrangeSpider,
-        recorderworks.ContraCostaSpider,
-        recorderworks.SanMateoSpider,
-        recorderworks.StanislausSpider,
-        recorderworks.MercedSpider,
-        recorderworks.ImperialSpider,
-        recorderworks.SiskiyouSpider,
-        recorderworks.ModocSpider,
+    PDF_DIRECTORY = os.path.join(OUTPUT_DIR, 'PDF_files\\')
+    if not os.path.exists(PDF_DIRECTORY):
+        os.makedirs(PDF_DIRECTORY)
 
-        # DOCSEARCH spiders
-        docsearch.RiversideSpider,
-        docsearch.SanBernardinoSpider,
-        docsearch.FresnoSpider,
-        docsearch.VenturaSpider,
-        docsearch.SanJoaquinSpider,
-        docsearch.SonomaSpider,
-        docsearch.SantaBarbaraSpider,
-        docsearch.MontereySpider,
-        docsearch.SanLuisObispoSpider,
-        docsearch.ButteSpider,
-        docsearch.YoloSpider,
-        docsearch.ElDoradoSpider,
-        docsearch.ShastaSpider,
-        docsearch.MaderaSpider,
-        docsearch.YubaSpider,
-        docsearch.SanBenitoSpider,
-        docsearch.CalaverasSpider,
-        docsearch.DelNorteSpider,
-        docsearch.InyoSpider,
-        docsearch.AlpineSpider,
+    # ENTITY SCRAPER
+    if scraping_mode == 'entity':
 
-        # API spiders
-        apispiders.SacramentoSpider,
-        apispiders.SanFranciscoSpider,
+        df = pd.read_excel(OUTPUT_DIR + 'Borrower Name Schedule.xlsx')
+        keywords = df.iloc[:, 3].tolist()
+        process.crawl(EntitySpider, pdf_directory=PDF_DIRECTORY, input_keywords=keywords)
+        process.start(install_signal_handlers=True)
 
-        # Official Records spiders
-        officialrecords.TehamaSpider,
-        officialrecords.TrinitySpider,
+    # RECORDER SCRAPER
+    else:
+        scraped_data = load_scraped_data_from_jsonl(scraped_data_file_name)
+        input_keywords = load_input_keywords_from_excel(input_excel_file_path)
+        input_columns = input_keywords[0].keys()
+        completed_keywords = [line for line in scraped_data if line.get('last_record')]
 
-        # San Diego and Nevada are in the same website group, but I implemented them as separate spiders
-        # TODO -> merge them into the same base class
-        other.SanDiegoSpider,
-        other.NevadaSpider,
+        all_spiders = [
+            # RecorderWorks spiders
+            recorderworks.OrangeSpider,
+            recorderworks.ContraCostaSpider,
+            recorderworks.SanMateoSpider,
+            recorderworks.StanislausSpider,
+            recorderworks.MercedSpider,
+            recorderworks.ImperialSpider,
+            recorderworks.SiskiyouSpider,
+            recorderworks.ModocSpider,
 
-        # Other spiders
-        other.KernSpider,
-        other.TulareSpider,
-        other.PlacerSpider,
-        other.MarinSpider,
-        other.MendocinoSpider,
-    ]
+            # DOCSEARCH spiders
+            docsearch.RiversideSpider,
+            docsearch.SanBernardinoSpider,
+            docsearch.FresnoSpider,
+            docsearch.VenturaSpider,
+            docsearch.SanJoaquinSpider,
+            docsearch.SonomaSpider,
+            docsearch.SantaBarbaraSpider,
+            docsearch.MontereySpider,
+            docsearch.SanLuisObispoSpider,
+            docsearch.ButteSpider,
+            docsearch.YoloSpider,
+            docsearch.ElDoradoSpider,
+            docsearch.ShastaSpider,
+            docsearch.MaderaSpider,
+            docsearch.YubaSpider,
+            docsearch.SanBenitoSpider,
+            docsearch.CalaverasSpider,
+            docsearch.DelNorteSpider,
+            docsearch.InyoSpider,
+            docsearch.AlpineSpider,
 
-    # for spider in all_spiders:
-    #     print(f'{spider.name}')
+            # API spiders
+            apispiders.SacramentoSpider,
+            apispiders.SanFranciscoSpider,
 
-    for spider in all_spiders:
-        current_completed_keywords = [
-            {key: value for key, value in completed.items() if key in input_columns}
-            for completed in completed_keywords if completed['county'] == spider.name
+            # Official Records spiders
+            officialrecords.TehamaSpider,
+            officialrecords.TrinitySpider,
+
+            # San Diego and Nevada are in the same website group, but I implemented them as separate spiders
+            # TODO -> merge them into the same base class
+            other.NevadaSpider,
+
+            # Other spiders
+            # TODO: NOT WORKING
+            other.SanDiegoSpider,
+
+            # TODO: check Kern often not working
+            other.KernSpider,
+            other.TulareSpider,
+            other.PlacerSpider,
+            other.MarinSpider,
+            other.MendocinoSpider,
         ]
 
-        current_keywords_for_county = [kw for kw in input_keywords if kw not in current_completed_keywords]
-        if current_keywords_for_county:
-            process.crawl(spider, input_keywords=current_keywords_for_county)
+        # for spider in all_spiders:
+        #     print(f'{spider.name}')
+
+        for spider in all_spiders:
+            current_completed_keywords = [
+                {key: value for key, value in completed.items() if key in input_columns}
+                for completed in completed_keywords if completed['county'] == spider.name
+            ]
+
+            current_keywords_for_county = [kw for kw in input_keywords if kw not in current_completed_keywords]
+            if current_keywords_for_county:
+                process.crawl(spider, input_keywords=current_keywords_for_county)
+            else:
+                logger.info(f'All keywords are already scraped for {spider.name}')
+
+        process.start(install_signal_handlers=True)
+        logger.info('Scraping Completed!')
+
+        if scraping_mode == 'grantor':
+            generate_excel_report(output_excel_file_path=OUTPUT_DIR + 'Borrower Name Schedule.xlsx', filter_deed_of_trust_only=True, filter_individuals=True)
         else:
-            logger.info(f'All keywords are already scraped for {spider.name}')
-
-    process.start(install_signal_handlers=True)
-
-    logger.info('Scraping Completed!')
-
-    generate_excel_report()
+            generate_excel_report(output_excel_file_path=OUTPUT_DIR + 'Lender Name Schedule.xlsx')
 
 
 if __name__ == '__main__':

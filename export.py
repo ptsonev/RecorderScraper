@@ -1,13 +1,15 @@
 import logging
+from datetime import datetime
 from itertools import groupby
 from operator import itemgetter
+from os.path import exists
 
 import openpyxl
 from openpyxl.worksheet.table import TableStyleInfo, Table
 from openpyxl.worksheet.worksheet import Worksheet
 from scrapy.utils.project import get_project_settings
 
-from RecorderScraper.helpers import load_scraped_data_from_jsonl, parse_recording_date
+from RecorderScraper.helpers import load_scraped_data_from_jsonl, parse_recording_date, remove_non_az
 
 logger = logging.getLogger(__name__)
 
@@ -34,11 +36,51 @@ def prettify_columns(input_names: list[str]):
     return [n.replace('_', ' ').title() for n in input_names]
 
 
-def _generate_excel_report(scraped_data: list[dict[str, str]], scraping_mode: str, output_excel_file_path: str = 'output.xlsx'):
+def is_llc(input_str: str) -> bool:
+    words = [remove_non_az(w) for w in input_str.split(' ')]
+    to_exclude_list = [
+        'TRUSTEE',
+        'TRUST',
+    ]
+    if any([to_exclude in words for to_exclude in to_exclude_list]):
+        return False
+
+    entity_list = {
+        'LLC',
+        'ENTERPRISE',
+        'INC',
+        'INCORPORATED',
+        'CORP',
+        'CORPORATION',
+        'GROUP',
+        'INVEST',
+        'INVESTING',
+        'SOLUTIONS',
+        'LP',
+        'FOUNDATION',
+        'COMPANY',
+        'AMERICAN',
+        'ASSOCIATION',
+        'DEVELOPMENT',
+        'ENTERPRISES',
+        'VENTURES',
+        'FUND',
+        'FUNDING',
+        'PROPERTIES',
+        'PROPERTY',
+        'CAPITAL',
+    }
+    if any([entity in words for entity in entity_list]):
+        return True
+
+    return False
+
+
+def _generate_excel_report(scraped_data: list[dict[str, str]], scraping_mode: str, output_excel_file_path: str = 'output.xlsx', filter_individuals: bool = False, filter_deed_of_trust_only: bool = False):
     workbook = openpyxl.Workbook()
     workbook.remove(workbook['Sheet'])
 
-    results_sheet_columns = ['keyword', 'county', scraping_mode, 'recording_date', 'document_type', 'document_url']
+    results_sheet_columns = ['keyword', 'county', 'scraping_date', scraping_mode, 'recording_date', 'document_type', 'document_url']
 
     # Grantee/Grantor Results Sheet
     results_sheet = workbook.create_sheet('Results')
@@ -46,21 +88,39 @@ def _generate_excel_report(scraped_data: list[dict[str, str]], scraping_mode: st
 
     unique_names = set()
     all_results = []
+    deed_of_trust_docs = [
+        'TRUSTDEED',
+        'DEEDOFTRUST',
+        'TRUSTDEEDDEEDOFTRUST',
+    ]
     for current_record in scraped_data:
         current_names_list = current_record.get(scraping_mode)
         if current_record.get('last_record') or not current_names_list:
             continue
 
+        current_record_docs = [remove_non_az(d) for d in current_record.get('document_type').split(',')]
+
+        if not any(doc_type in deed_of_trust_docs for doc_type in current_record_docs) and filter_deed_of_trust_only:
+            continue
+
         for name in current_names_list:
+            name = name.replace('L L C', 'LLC')
+
             if name in unique_names:
                 continue
+
             unique_names.add(name)
+
+            if not is_llc(name) and filter_individuals:
+                continue
 
             current_result = dict.fromkeys(results_sheet_columns)
             for key in current_result.keys():
                 value = current_record.get(key)
                 if key == 'recording_date':
                     current_result[key] = parse_recording_date([value])
+                elif key == 'scraping_date':
+                    current_result[key] = datetime.now().date()
                 else:
                     current_result[key] = value
 
@@ -68,7 +128,7 @@ def _generate_excel_report(scraped_data: list[dict[str, str]], scraping_mode: st
 
             all_results.append(current_result)
 
-    all_results.sort(key=itemgetter('county', scraping_mode))
+    all_results.sort(key=itemgetter('county', scraping_mode, 'keyword'))
     for result in all_results:
         results_sheet.append(list(result.values()))
 
@@ -102,14 +162,21 @@ def _generate_excel_report(scraped_data: list[dict[str, str]], scraping_mode: st
     workbook.save(output_excel_file_path)
 
 
-def generate_excel_report():
+def generate_excel_report(filter_deed_of_trust_only: bool = False, filter_individuals: bool = False, output_excel_file_path: str = ''):
     logger.info('Preparing the Excel report. Please wait...')
     settings = get_project_settings()
     scraping_mode = settings.get('SCRAPING_MODE')
     scraped_data_file_name = settings.get('DATA_FILE')
-    output_excel_file_path = settings.get('OUTPUT_FILE')
+
+    if not output_excel_file_path:
+        output_excel_file_path = settings.get('OUTPUT_FILE')
+
     scraped_data = load_scraped_data_from_jsonl(scraped_data_file_name)
-    _generate_excel_report(scraped_data, scraping_mode=scraping_mode, output_excel_file_path=output_excel_file_path)
+
+    if exists(scraped_data_file_name + 'old'):
+        scraped_data += load_scraped_data_from_jsonl(scraped_data_file_name + 'old')
+
+    _generate_excel_report(scraped_data, scraping_mode=scraping_mode, output_excel_file_path=output_excel_file_path, filter_deed_of_trust_only=filter_deed_of_trust_only, filter_individuals=filter_individuals)
     logger.info(f'All data was successfully saved to {output_excel_file_path}')
 
 
